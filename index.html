@@ -24,29 +24,30 @@
             const calculateCompoundInterest = (e) => {
                 e.preventDefault();
                 
-                const p = parseFloat(principal) || 0;
-                const pmt = parseFloat(monthlyDeposit) || 0;
-                const r = parseFloat(rate) / 100;
-                const t = parseFloat(months) / 12;
-                const n = parseFloat(frequency);
+                // המרת הערכים למספרים
+                const P = parseFloat(principal) || 0; // סכום התחלתי
+                const PMT = parseFloat(monthlyDeposit) || 0; // הפקדה חודשית
+                const r = parseFloat(rate) / 100; // ריבית שנתית
+                const t = parseFloat(months); // מספר חודשים
+                const n = parseFloat(frequency); // תדירות חישוב בשנה
                 
-                const ratePerPeriod = r / n;
-                const numOfPeriods = n * t;
+                // חישוב סכום סופי מהקרן ההתחלתית
+                const principalFuture = P * Math.pow(1 + r/n, n * t/12);
+
+                // חישוב סכום סופי מההפקדות החודשיות
+                const i = r/n; // ריבית לתקופה
+                const periods = n * t/12; // מספר תקופות כולל
+
+                // נוסחה להפקדות חודשיות עם ריבית דריבית
+                const depositsFuture = PMT * (Math.pow(1 + i, periods) - 1) / i;
                 
-                const principalFinal = p * Math.pow(1 + ratePerPeriod, numOfPeriods);
-                
-                let depositsFinal = 0;
-                if (pmt > 0) {
-                    depositsFinal = pmt * ((Math.pow(1 + ratePerPeriod, numOfPeriods) - 1) / ratePerPeriod);
-                    depositsFinal = depositsFinal * (n / 12);
-                }
-                
-                const totalAmount = principalFinal + depositsFinal;
-                const totalDeposits = p + (pmt * months);
-                const totalInterest = totalAmount - totalDeposits;
+                // סיכום התוצאות
+                const totalDeposits = P + (PMT * t); // סך כל ההפקדות
+                const finalAmount = principalFuture + depositsFuture; // סכום סופי כולל
+                const totalInterest = finalAmount - totalDeposits; // הרווח מריבית
                 
                 setResult({
-                    finalAmount: totalAmount,
+                    finalAmount: finalAmount,
                     totalInterest: totalInterest,
                     totalDeposits: totalDeposits
                 });
