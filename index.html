@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחשבון ריבית דריבית</title>
+    <!-- טעינת הספריות הנדרשות -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 p-4">
+    <div id="root"></div>
+    <script type="text/babel">
+        const CompoundInterestCalculator = () => {
+            const [principal, setPrincipal] = React.useState('');
+            const [monthlyDeposit, setMonthlyDeposit] = React.useState('');
+            const [rate, setRate] = React.useState('');
+            const [months, setMonths] = React.useState('');
+            const [frequency, setFrequency] = React.useState('12');
+            const [result, setResult] = React.useState(null);
+
+            const calculateCompoundInterest = (e) => {
+                e.preventDefault();
+                
+                const p = parseFloat(principal) || 0;
+                const pmt = parseFloat(monthlyDeposit) || 0;
+                const r = parseFloat(rate) / 100;
+                const t = parseFloat(months) / 12;
+                const n = parseFloat(frequency);
+                
+                const ratePerPeriod = r / n;
+                const numOfPeriods = n * t;
+                
+                const principalFinal = p * Math.pow(1 + ratePerPeriod, numOfPeriods);
+                
+                let depositsFinal = 0;
+                if (pmt > 0) {
+                    depositsFinal = pmt * ((Math.pow(1 + ratePerPeriod, numOfPeriods) - 1) / ratePerPeriod);
+                    depositsFinal = depositsFinal * (n / 12);
+                }
+                
+                const totalAmount = principalFinal + depositsFinal;
+                const totalDeposits = p + (pmt * months);
+                const totalInterest = totalAmount - totalDeposits;
+                
+                setResult({
+                    finalAmount: totalAmount,
+                    totalInterest: totalInterest,
+                    totalDeposits: totalDeposits
+                });
+            };
+
+            return (
+                <div className="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-6">
+                    <h1 className="text-2xl font-bold mb-6 text-center">מחשבון ריבית דריבית</h1>
+                    <form onSubmit={calculateCompoundInterest} className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="block">סכום התחלתי אם יש (₪)</label>
+                            <input
+                                type="number"
+                                value={principal}
+                                onChange={(e) => setPrincipal(e.target.value)}
+                                className="w-full p-2 border rounded"
+                                placeholder="השאר ריק אם אין סכום התחלתי"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="block">הפקדה חודשית (₪)</label>
+                            <input
+                                type="number"
+                                value={monthlyDeposit}
+                                onChange={(e) => setMonthlyDeposit(e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                                placeholder="סכום ההפקדה החודשית"
+                            />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <label className="block">ריבית שנתית (%)</label>
+                            <input
+                                type="number"
+                                value={rate}
+                                onChange={(e) => setRate(e.target.value)}
+                                className="w-full p-2 border rounded"
+                                step="0.01"
+                                required
+                            />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <label className="block">תקופה (חודשים)</label>
+                            <input
+                                type="number"
+                                value={months}
+                                onChange={(e) => setMonths(e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <label className="block">תדירות חישוב הריבית</label>
+                            <select
+                                value={frequency}
+                                onChange={(e) => setFrequency(e.target.value)}
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="1">שנתי</option>
+                                <option value="2">חצי שנתי</option>
+                                <option value="4">רבעוני</option>
+                                <option value="12">חודשי</option>
+                                <option value="365">יומי</option>
+                            </select>
+                        </div>
+                        
+                        <button
+                            type="submit"
+                            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+                        >
+                            חשב
+                        </button>
+                    </form>
+                    
+                    {result && (
+                        <div className="mt-6 p-4 bg-gray-50 rounded">
+                            <h3 className="font-bold mb-2">תוצאות:</h3>
+                            <p>סך הכל הפקדות: ₪{result.totalDeposits.toLocaleString('he-IL', { maximumFractionDigits: 2 })}</p>
+                            <p>רווח מריבית: ₪{result.totalInterest.toLocaleString('he-IL', { maximumFractionDigits: 2 })}</p>
+                            <p>סכום סופי: ₪{result.finalAmount.toLocaleString('he-IL', { maximumFractionDigits: 2 })}</p>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<CompoundInterestCalculator />, document.getElementById('root'));
+    </script>
+</body>
+</html>
