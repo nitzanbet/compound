@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מחשבון ריבית דריבית</title>
-    <!-- טעינת הספריות הנדרשות -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -18,53 +17,60 @@
             const [monthlyDeposit, setMonthlyDeposit] = React.useState('');
             const [rate, setRate] = React.useState('');
             const [months, setMonths] = React.useState('');
-            const [frequency, setFrequency] = React.useState('12');
             const [result, setResult] = React.useState(null);
 
             const calculateCompoundInterest = (e) => {
                 e.preventDefault();
                 
-                // המרת הערכים למספרים
-                const P = parseFloat(principal) || 0; // סכום התחלתי
-                const PMT = parseFloat(monthlyDeposit) || 0; // הפקדה חודשית
-                const r = parseFloat(rate) / 100; // ריבית שנתית
-                const t = parseFloat(months); // מספר חודשים
-                const n = parseFloat(frequency); // תדירות חישוב בשנה
+                const P = parseFloat(principal) || 0;
+                const PMT = parseFloat(monthlyDeposit) || 0;
+                const r = parseFloat(rate) / 100;
+                const t = parseInt(months);
                 
-                // חישוב סכום סופי מהקרן ההתחלתית
-                const principalFuture = P * Math.pow(1 + r/n, n * t/12);
+                // חישוב הקרן + ריבית
+                const principalFuture = P * Math.pow(1 + r/12, t);
+                
+                // חישוב ההפקדות החודשיות + ריבית
+                let depositsFuture = 0;
+                if (r > 0) {
+                    const ratePerMonth = r / 12;
+                    depositsFuture = PMT * ((Math.pow(1 + ratePerMonth, t) - 1) / ratePerMonth);
+                } else {
+                    depositsFuture = PMT * t;
+                }
 
-                // חישוב סכום סופי מההפקדות החודשיות
-                const i = r/n; // ריבית לתקופה
-                const periods = n * t/12; // מספר תקופות כולל
+                const totalDeposits = P + (PMT * t);
+                const finalAmount = principalFuture + depositsFuture;
+                const totalInterest = finalAmount - totalDeposits;
 
-                // נוסחה להפקדות חודשיות עם ריבית דריבית
-                const depositsFuture = PMT * (Math.pow(1 + i, periods) - 1) / i;
-                
-                // סיכום התוצאות
-                const totalDeposits = P + (PMT * t); // סך כל ההפקדות
-                const finalAmount = principalFuture + depositsFuture; // סכום סופי כולל
-                const totalInterest = finalAmount - totalDeposits; // הרווח מריבית
-                
                 setResult({
                     finalAmount: finalAmount,
                     totalInterest: totalInterest,
-                    totalDeposits: totalDeposits
+                    totalDeposits: totalDeposits,
                 });
+            };
+
+            const formatCurrency = (number) => {
+                return new Intl.NumberFormat('he-IL', {
+                    style: 'currency',
+                    currency: 'ILS',
+                    maximumFractionDigits: 0
+                }).format(number);
             };
 
             return (
                 <div className="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-6">
                     <h1 className="text-2xl font-bold mb-6 text-center">מחשבון ריבית דריבית</h1>
+                    
                     <form onSubmit={calculateCompoundInterest} className="space-y-4">
                         <div className="space-y-2">
-                            <label className="block">סכום התחלתי אם יש (₪)</label>
+                            <label className="block">סכום התחלתי (₪)</label>
                             <input
                                 type="number"
                                 value={principal}
                                 onChange={(e) => setPrincipal(e.target.value)}
                                 className="w-full p-2 border rounded"
-                                placeholder="השאר ריק אם אין סכום התחלתי"
+                                placeholder="0"
                             />
                         </div>
 
@@ -76,10 +82,9 @@
                                 onChange={(e) => setMonthlyDeposit(e.target.value)}
                                 className="w-full p-2 border rounded"
                                 required
-                                placeholder="סכום ההפקדה החודשית"
                             />
                         </div>
-                        
+
                         <div className="space-y-2">
                             <label className="block">ריבית שנתית (%)</label>
                             <input
@@ -87,11 +92,11 @@
                                 value={rate}
                                 onChange={(e) => setRate(e.target.value)}
                                 className="w-full p-2 border rounded"
-                                step="0.01"
+                                step="0.1"
                                 required
                             />
                         </div>
-                        
+
                         <div className="space-y-2">
                             <label className="block">תקופה (חודשים)</label>
                             <input
@@ -102,36 +107,21 @@
                                 required
                             />
                         </div>
-                        
-                        <div className="space-y-2">
-                            <label className="block">תדירות חישוב הריבית</label>
-                            <select
-                                value={frequency}
-                                onChange={(e) => setFrequency(e.target.value)}
-                                className="w-full p-2 border rounded"
-                            >
-                                <option value="1">שנתי</option>
-                                <option value="2">חצי שנתי</option>
-                                <option value="4">רבעוני</option>
-                                <option value="12">חודשי</option>
-                                <option value="365">יומי</option>
-                            </select>
-                        </div>
-                        
+
                         <button
                             type="submit"
-                            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+                            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition-colors"
                         >
                             חשב
                         </button>
                     </form>
-                    
+
                     {result && (
-                        <div className="mt-6 p-4 bg-gray-50 rounded">
-                            <h3 className="font-bold mb-2">תוצאות:</h3>
-                            <p>סך הכל הפקדות: ₪{result.totalDeposits.toLocaleString('he-IL', { maximumFractionDigits: 2 })}</p>
-                            <p>רווח מריבית: ₪{result.totalInterest.toLocaleString('he-IL', { maximumFractionDigits: 2 })}</p>
-                            <p>סכום סופי: ₪{result.finalAmount.toLocaleString('he-IL', { maximumFractionDigits: 2 })}</p>
+                        <div className="mt-6 p-4 bg-gray-50 rounded space-y-2">
+                            <h3 className="font-bold mb-3">תוצאות:</h3>
+                            <p>סך הכל הפקדות: {formatCurrency(result.totalDeposits)}</p>
+                            <p>רווח מריבית: {formatCurrency(result.totalInterest)}</p>
+                            <p className="font-bold">סכום סופי: {formatCurrency(result.finalAmount)}</p>
                         </div>
                     )}
                 </div>
